@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Akinator — BCSAI 2026</title>
+  <style>
+    :root {
+      --bg: #0a1628; --card: #f8fafc; --card-muted: #94a3b8; --accent: #38bdf8;
+      --gold: #e8c547; --yes: #22c55e; --no: #ef4444;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; font-family: var(--font); background: var(--bg); color: #e2e8f0; }
+    body { background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%), var(--bg); }
+    .wrap { min-height: 100vh; padding: 1.5rem; display: flex; flex-direction: column; }
+    .welcome-inner { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; max-width: 40rem; margin: 0 auto; }
+    h1 { font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 800; letter-spacing: -0.03em; margin: 0 0 0.5rem; color: #fff; }
+    .subtitle { font-size: 1.1rem; color: var(--accent); font-weight: 600; margin-bottom: 1rem; }
+    .tagline { color: #cbd5e1; font-size: 1.05rem; line-height: 1.5; margin-bottom: 2rem; }
+    .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #6366f1); color: #fff; border: none;
+      padding: 1rem 2.5rem; font-size: 1.15rem; font-weight: 700; border-radius: 999px; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(56, 189, 248, 0.35);
+    }
+    .footer-note { margin-top: 2.5rem; font-size: 0.8rem; color: var(--card-muted); }
+    .btn-ghost {
+      position: fixed; bottom: 1rem; right: 1rem; background: rgba(255,255,255,0.08); color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.12); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
+    }
+    .game-layout { display: flex; flex: 1; gap: 1.25rem; max-width: 1400px; margin: 0 auto; width: 100%; align-items: stretch; }
+    .question-panel {
+      flex: 0 0 60%; background: var(--card); color: #0f172a; border-radius: 16px; padding: 2rem;
+      display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+    }
+    .math-panel {
+      flex: 0 0 40%; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; backdrop-filter: blur(8px);
+    }
+    .math-panel h2 { margin: 0 0 1rem; font-size: 1.1rem; color: var(--gold); }
+    .progress { font-size: 0.9rem; color: #64748b; margin-bottom: 1rem; font-weight: 600; }
+    .q-text { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+      font-size: clamp(1.35rem, 2.5vw, 1.85rem); font-weight: 800; line-height: 1.35; padding: 1rem 0;
+      animation: qIn 0.45s ease forwards; }
+    @keyframes qIn { from { opacity: 0; } to { opacity: 1; } }
+    .q-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: auto; padding-top: 1.5rem; }
+    .q-buttons form { flex: 1; max-width: 200px; }
+    .btn-yes, .btn-no {
+      width: 100%; padding: 1.1rem; font-size: 1.1rem; font-weight: 800; border: none; border-radius: 12px; cursor: pointer;
+    }
+    .btn-yes { background: var(--yes); color: #fff; }
+    .btn-no { background: var(--no); color: #fff; }
+    .candidate { margin-bottom: 0.65rem; padding: 0.5rem 0.6rem; border-radius: 8px; border: 2px solid transparent; transition: 0.25s; }
+    .candidate.leader { border-color: var(--gold); background: rgba(232, 197, 71, 0.12); }
+    .cand-name { font-size: 0.8rem; font-weight: 700; color: #e2e8f0; margin-bottom: 0.25rem; }
+    .bar-wrap { height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #38bdf8, #818cf8); transition: width 0.3s ease; }
+    .sigma-block { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sigma-block p { margin: 0 0 0.5rem; font-size: 0.8rem; color: #94a3b8; }
+    .sigma-bars { display: flex; align-items: flex-end; gap: 4px; height: 64px; }
+    .sigma-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .sigma-rect { width: 100%; background: linear-gradient(180deg, var(--gold), #b45309); border-radius: 4px 4px 0 0; min-height: 4px; }
+    .sigma-label { font-size: 0.6rem; color: #64748b; }
+    .entropy-line { margin-top: 0.75rem; font-size: 0.85rem; color: #7dd3fc; }
+    .score-note { margin-top: auto; padding-top: 0.75rem; font-size: 0.68rem; color: #64748b; line-height: 1.4; }
+    .guess-screen { align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+    .guess-card {
+      background: var(--card); color: #0f172a; border-radius: 20px; padding: 2.5rem 2rem; max-width: 32rem;
+      margin: 0 auto; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    }
+    .guess-lead { font-size: 1.1rem; color: #64748b; margin-bottom: 0.5rem; }
+    .guess-name { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 900; margin-bottom: 1.5rem; min-height: 3rem; }
+    .leaderboard { text-align: left; margin: 1rem 0; font-size: 0.9rem; color: #475569; }
+    .leaderboard div { padding: 0.35rem 0; border-bottom: 1px solid #e2e8f0; }
+    .guess-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 1.25rem; }
+    .guess-actions button { padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 0.95rem; }
+    .btn-win { background: var(--yes); color: #fff; }
+    .btn-fail { background: var(--no); color: #fff; }
+    .btn-again { background: #334155; color: #fff; }
+    .celebrate { margin-top: 1rem; font-size: 1.1rem; font-weight: 700; color: var(--yes); }
+    .wrong-form { margin-top: 1rem; }
+    .wrong-form input { width: 100%; padding: 0.65rem; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 0.5rem; font-size: 1rem; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--card); color: #0f172a; border-radius: 16px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.75rem; position: relative; }
+    .modal-close { position: absolute; top: 1rem; right: 1rem; background: #e2e8f0; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
+    .modal-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
+    .modal-col h4 { margin: 0 0 0.5rem; font-size: 0.95rem; color: #6366f1; }
+    .modal-col p { margin: 0; font-size: 0.85rem; line-height: 1.5; color: #475569; }
+    .formula { font-family: ui-monospace, monospace; font-size: 0.78rem; background: #f1f5f9; padding: 0.5rem; border-radius: 6px; margin-top: 0.5rem; }
+    @media (max-width: 900px) {
+      .game-layout { flex-direction: column; }
+      .math-panel { max-height: 280px; overflow-y: auto; order: 2; }
+      .question-panel { order: 1; }
+      .modal-cols { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  {% if phase == 'welcome' %}
+  <div class="wrap">
+    <div class="welcome-inner">
+      <h1>Class Akinator</h1>
+      <p class="subtitle">Powered by Eigenvalues &amp; SVD (Python / NumPy)</p>
+      <p class="tagline">Think of someone in this class. I will guess who it is.</p>
+      <form method="post" action="/start"><button type="submit" class="btn-primary">Let&rsquo;s play</button></form>
+      <p class="footer-note">IE University | BCSAI 2026 | Matrices and Linear Transformations</p>
+    </div>
+    <button type="button" class="btn-ghost" data-open-modal>How it works</button>
+  </div>
+  {% elif phase == 'play' %}
+  <div class="wrap">
+    <div class="game-layout">
+      <div class="question-panel">
+        <div class="progress">Question {{ question_num }} of ~8</div>
+        <div class="q-text">{{ question_text }}</div>
+        <div class="q-buttons">
+          <form method="post" action="/answer"><input type="hidden" name="value" value="yes" /><button type="submit" class="btn-yes">YES</button></form>
+          <form method="post" action="/answer"><input type="hidden" name="value" value="no" /><button type="submit" class="btn-no">NO</button></form>
+        </div>
+      </div>
+      <div class="math-panel">
+        <h2>SVD Engine</h2>
+        {% for c in top_candidates %}
+        <div class="candidate{% if c.leader %} leader{% endif %}">
+          <div class="cand-name">{{ c.name }} · {{ '%.3f'|format(c.score) }}</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width: {{ c.bar_pct }}%"></div></div>
+        </div>
+        {% endfor %}
+        <div class="sigma-block">
+          <p>Latent dimensions active: <strong>k = 14</strong> (~{{ cumulative_k_pct }}% variance)</p>
+          <div class="sigma-bars">
+            {% set smax = sigma_display[0] %}
+            {% for sig in sigma_display[:6] %}
+            <div class="sigma-item">
+              <div class="sigma-rect" style="height: {{ [4, (sig / smax * 100)] | max }}%"></div>
+              <span class="sigma-label">σ{{ loop.index }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="entropy-line">Current question entropy: H = {{ '%.3f'|format(entropy) }}</div>
+        <p class="score-note">SVD precomputed with numpy.linalg.svd. Scoring: 60% latent cosine + 40% raw agreement after 3 answers; scores min–max normalised before blending.</p>
+      </div>
+    </div>
+    <button type="button" class="btn-ghost" data-open-modal>How it works</button>
+  </div>
+  {% elif phase == 'guess' %}
+  <div class="wrap guess-screen">
+    <div class="guess-card">
+      <p class="guess-lead">I think you are thinking of&hellip;</p>
+      <div class="guess-name" id="guess-name" data-full="{{ guess_name }}"></div>
+      <div class="leaderboard">
+        <strong>Top 3</strong>
+        {% for idx, sc in guess_ranking %}
+        <div>{{ loop.index }}. {{ people[idx] }} — {{ '%.3f'|format(sc) }}</div>
+        {% endfor %}
+      </div>
+      <div class="guess-actions">
+        <form method="post" action="/guess/correct"><button type="submit" class="btn-win">Yes, correct!</button></form>
+        <form method="post" action="/guess/wrong"><button type="submit" class="btn-fail">No, wrong!</button></form>
+        <form method="post" action="/play-again"><button type="submit" class="btn-again">Play again</button></form>
+      </div>
+      {% if celebrated %}
+      <p class="celebrate">The eigenvalues never lie.</p>
+      {% endif %}
+      {% if show_wrong_form %}
+      <div class="wrong-form">
+        <p style="margin:0 0 0.5rem;font-size:0.9rem;">Who were you thinking of?</p>
+        <input type="text" placeholder="Name (optional)" />
+        <form method="post" action="/play-again" style="margin-top:0.5rem"><button type="submit" class="btn-again">Play again</button></form>
+      </div>
+      {% endif %}
+    </div>
+    <button type="button" class="btn-ghost" data-open-modal>How it works</button>
+  </div>
+  {% endif %}
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <button type="button" class="modal-close" data-close-modal>&times;</button>
+      <h3>How it works</h3>
+      <div class="modal-cols">
+        <div class="modal-col">
+          <h4>The matrix</h4>
+          <p><strong>M</strong> is 46×36. Each row is a classmate; each column is a yes/no question (final Excel: no &ldquo;American&rdquo; or mixed-background column).</p>
+          <div class="formula">M ∈ {0,1}^{46×36}</div>
+        </div>
+        <div class="modal-col">
+          <h4>SVD</h4>
+          <p><strong>M = UΣV<sup>T</sup></strong> via <code>numpy.linalg.svd</code>. With <strong>k = 14</strong>, about <strong>{{ cumulative_k_pct }}%</strong> of variance is retained. σ₁ ≈ {{ '%.2f'|format(sigma_display[0]) }} explains about <strong>{{ variance_sigma1_pct }}%</strong> of variance.</p>
+          <div class="formula">Z = M V<sub>k</sub><sup>T</sup></div>
+        </div>
+        <div class="modal-col">
+          <h4>The score</h4>
+          <p>Answers form <strong>a</strong>. Early rounds: raw agreement. From the 4th answer: blend with cosine similarity in latent space. Next question: maximum binary entropy under current belief.</p>
+          <div class="formula">z<sub>user</sub> = V<sub>k</sub> a</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('[data-open-modal]').forEach(function (b) {
+      b.addEventListener('click', function () { document.getElementById('modal').classList.add('open'); });
+    });
+    document.querySelectorAll('[data-close-modal]').forEach(function (b) {
+      b.addEventListener('click', function () { document.getElementById('modal').classList.remove('open'); });
+    });
+    document.getElementById('modal').addEventListener('click', function (e) {
+      if (e.target.id === 'modal') e.currentTarget.classList.remove('open');
+    });
+    (function typewriter() {
+      var el = document.getElementById('guess-name');
+      if (!el || !el.dataset.full) return;
+      var full = el.dataset.full, k = 0;
+      function step() {
+        if (k <= full.length) { el.textContent = full.slice(0, k++); setTimeout(step, k < 4 ? 55 : 42); }
+      }
+      step();
+    })();
+  </script>
+</body>
+</html>
