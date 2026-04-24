@@ -6,93 +6,255 @@
   <title>Class Akinator — BCSAI 2026</title>
   <style>
     :root {
-      --bg: #0a1628; --card: #f8fafc; --card-muted: #94a3b8; --accent: #38bdf8;
-      --gold: #e8c547; --yes: #22c55e; --no: #ef4444;
-      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --bg: #0a1628;
+      --bg-deep: #060d18;
+      --panel: #0f1c33;
+      --panel-soft: rgba(15, 23, 42, 0.8);
+      --border: rgba(255, 255, 255, 0.08);
+      --card: #f8fafc;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --text-soft: #cbd5e1;
+      --accent: #38bdf8;
+      --indigo: #6366f1;
+      --gold: #e8c547;
+      --yes: #22c55e;
+      --no: #ef4444;
+      --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --radius: 16px;
     }
+
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; font-family: var(--font); background: var(--bg); color: #e2e8f0; }
-    body { background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%), var(--bg); }
-    .wrap { min-height: 100vh; padding: 1.5rem; display: flex; flex-direction: column; }
-    .welcome-inner { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; max-width: 40rem; margin: 0 auto; }
-    h1 { font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 800; letter-spacing: -0.03em; margin: 0 0 0.5rem; color: #fff; }
-    .subtitle { font-size: 1.1rem; color: var(--accent); font-weight: 600; margin-bottom: 1rem; }
-    .tagline { color: #cbd5e1; font-size: 1.05rem; line-height: 1.5; margin-bottom: 2rem; }
+    html, body { margin: 0; min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); }
+    body {
+      background:
+        radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%),
+        var(--bg);
+      font-feature-settings: "ss01", "cv01";
+    }
+    button { font-family: inherit; }
+    .wrap { min-height: 100vh; padding: 1.25rem; display: flex; flex-direction: column; }
+
+    /* ---------- Welcome ---------- */
+    .welcome-inner {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; max-width: 42rem; margin: 0 auto; padding: 2rem 1rem;
+    }
+    h1 {
+      font-size: clamp(2.25rem, 6vw, 3.5rem); font-weight: 800; letter-spacing: -0.035em;
+      margin: 0 0 0.5rem; color: #fff;
+      background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 1.05rem; color: var(--accent); font-weight: 600; margin-bottom: 1.25rem; letter-spacing: 0.02em; }
+    .tagline { color: var(--text-soft); font-size: 1.05rem; line-height: 1.55; margin-bottom: 2.25rem; max-width: 32rem; }
     .btn-primary {
-      background: linear-gradient(135deg, #38bdf8, #6366f1); color: #fff; border: none;
-      padding: 1rem 2.5rem; font-size: 1.15rem; font-weight: 700; border-radius: 999px; cursor: pointer;
-      box-shadow: 0 8px 32px rgba(56, 189, 248, 0.35);
+      background: linear-gradient(135deg, var(--accent), var(--indigo)); color: #fff; border: 0;
+      padding: 1rem 2.5rem; font-size: 1.1rem; font-weight: 700; border-radius: 999px;
+      cursor: pointer; box-shadow: 0 10px 32px rgba(56, 189, 248, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
     }
-    .footer-note { margin-top: 2.5rem; font-size: 0.8rem; color: var(--card-muted); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 38px rgba(56, 189, 248, 0.45); }
+    .btn-primary:active { transform: translateY(0); filter: brightness(0.95); }
+    .footer-note { margin-top: 2.5rem; font-size: 0.8rem; color: var(--muted); }
     .btn-ghost {
-      position: fixed; bottom: 1rem; right: 1rem; background: rgba(255,255,255,0.08); color: #cbd5e1;
-      border: 1px solid rgba(255,255,255,0.12); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
+      position: fixed; bottom: 1rem; right: 1rem; z-index: 10;
+      background: rgba(255, 255, 255, 0.06); color: var(--text-soft);
+      border: 1px solid var(--border); padding: 0.55rem 1rem; border-radius: 10px;
+      font-size: 0.85rem; cursor: pointer; backdrop-filter: blur(6px);
+      transition: background 0.15s ease, transform 0.15s ease;
     }
-    .game-layout { display: flex; flex: 1; gap: 1.25rem; max-width: 1400px; margin: 0 auto; width: 100%; align-items: stretch; }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-1px); }
+
+    /* ---------- Play ---------- */
+    .game-layout {
+      display: flex; flex: 1; gap: 1.25rem; max-width: 1400px; margin: 0 auto; width: 100%;
+      align-items: stretch;
+    }
     .question-panel {
-      flex: 0 0 60%; background: var(--card); color: #0f172a; border-radius: 16px; padding: 2rem;
-      display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+      flex: 0 0 60%; background: var(--card); color: #0f172a;
+      border-radius: var(--radius); padding: 2rem; display: flex; flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+      min-height: 420px;
     }
-    .math-panel {
-      flex: 0 0 40%; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; backdrop-filter: blur(8px);
+    .progress-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap;
     }
-    .math-panel h2 { margin: 0 0 1rem; font-size: 1.1rem; color: var(--gold); }
-    .progress { font-size: 0.9rem; color: #64748b; margin-bottom: 1rem; font-weight: 600; }
-    .q-text { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
-      font-size: clamp(1.35rem, 2.5vw, 1.85rem); font-weight: 800; line-height: 1.35; padding: 1rem 0;
-      animation: qIn 0.45s ease forwards; }
-    @keyframes qIn { from { opacity: 0; } to { opacity: 1; } }
-    .q-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: auto; padding-top: 1.5rem; }
-    .q-buttons form { flex: 1; max-width: 200px; }
+    .progress-chip {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--indigo); background: #eef2ff; border-radius: 999px; padding: 0.35rem 0.75rem;
+    }
+    .remaining-chip {
+      font-size: 0.78rem; font-weight: 700; color: #0f172a;
+      background: #fef3c7; border: 1px solid #fde68a; border-radius: 999px; padding: 0.35rem 0.75rem;
+    }
+    .progress-track {
+      flex-basis: 100%; height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top: 0.25rem;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--accent), var(--indigo));
+      transition: width 0.35s ease;
+    }
+
+    .q-text {
+      flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+      font-size: clamp(1.4rem, 2.6vw, 1.95rem); font-weight: 800; line-height: 1.35;
+      padding: 1.5rem 0.5rem;
+      animation: qIn 0.45s ease;
+    }
+    @keyframes qIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .q-buttons { display: flex; gap: 1rem; justify-content: center; padding-top: 1.25rem; }
+    .q-buttons form { flex: 1; max-width: 220px; margin: 0; }
     .btn-yes, .btn-no {
-      width: 100%; padding: 1.1rem; font-size: 1.1rem; font-weight: 800; border: none; border-radius: 12px; cursor: pointer;
+      width: 100%; padding: 1.1rem; font-size: 1.1rem; font-weight: 800;
+      border: 0; border-radius: 12px; cursor: pointer; color: #fff;
+      transition: transform 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
     }
-    .btn-yes { background: var(--yes); color: #fff; }
-    .btn-no { background: var(--no); color: #fff; }
-    .candidate { margin-bottom: 0.65rem; padding: 0.5rem 0.6rem; border-radius: 8px; border: 2px solid transparent; transition: 0.25s; }
-    .candidate.leader { border-color: var(--gold); background: rgba(232, 197, 71, 0.12); }
-    .cand-name { font-size: 0.8rem; font-weight: 700; color: #e2e8f0; margin-bottom: 0.25rem; }
-    .bar-wrap { height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #38bdf8, #818cf8); transition: width 0.3s ease; }
-    .sigma-block { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); }
-    .sigma-block p { margin: 0 0 0.5rem; font-size: 0.8rem; color: #94a3b8; }
-    .sigma-bars { display: flex; align-items: flex-end; gap: 4px; height: 64px; }
-    .sigma-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .btn-yes { background: var(--yes); box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3); }
+    .btn-no  { background: var(--no);  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3); }
+    .btn-yes:hover, .btn-no:hover { transform: translateY(-1px); filter: brightness(1.06); }
+    .btn-yes:active, .btn-no:active { transform: translateY(0); }
+    .btn-yes[disabled], .btn-no[disabled] { opacity: 0.5; cursor: progress; transform: none; filter: none; }
+
+    /* ---------- SVD side panel ---------- */
+    .math-panel {
+      flex: 0 0 40%; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem 1.25rem 1rem; display: flex; flex-direction: column;
+      backdrop-filter: blur(8px);
+    }
+    .math-panel h2 {
+      margin: 0 0 0.85rem; font-size: 0.95rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .cand-list { display: flex; flex-direction: column; gap: 0.55rem; }
+    .candidate {
+      padding: 0.55rem 0.7rem; border-radius: 10px; border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.03);
+      transition: border-color 0.25s ease, background 0.25s ease;
+    }
+    .candidate.leader {
+      border-color: var(--gold); background: rgba(232, 197, 71, 0.1);
+      box-shadow: 0 0 0 1px rgba(232, 197, 71, 0.15);
+    }
+    .candidate.certain {
+      border-color: var(--yes); background: rgba(34, 197, 94, 0.12);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
+    }
+    .cand-head {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem;
+      font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem;
+    }
+    .cand-pct { font-variant-numeric: tabular-nums; color: var(--text-soft); font-weight: 600; font-size: 0.78rem; }
+    .bar-wrap { height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--indigo)); transition: width 0.3s ease; }
+    .candidate.certain .bar-fill { background: linear-gradient(90deg, var(--yes), #4ade80); }
+
+    .sigma-block { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border); }
+    .sigma-block .label { margin: 0 0 0.45rem; font-size: 0.8rem; color: var(--muted); }
+    .sigma-block strong { color: var(--text); }
+    .sigma-bars { display: flex; align-items: stretch; gap: 4px; height: 72px; }
+    .sigma-item { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
     .sigma-rect { width: 100%; background: linear-gradient(180deg, var(--gold), #b45309); border-radius: 4px 4px 0 0; min-height: 4px; }
-    .sigma-label { font-size: 0.6rem; color: #64748b; }
-    .entropy-line { margin-top: 0.75rem; font-size: 0.85rem; color: #7dd3fc; }
-    .score-note { margin-top: auto; padding-top: 0.75rem; font-size: 0.68rem; color: #64748b; line-height: 1.4; }
-    .guess-screen { align-items: center; justify-content: center; text-align: center; padding: 2rem; }
-    .guess-card {
-      background: var(--card); color: #0f172a; border-radius: 20px; padding: 2.5rem 2rem; max-width: 32rem;
-      margin: 0 auto; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    .sigma-label { font-size: 0.62rem; color: var(--muted); font-family: var(--mono); }
+
+    .entropy-line {
+      margin-top: 0.75rem; font-size: 0.82rem; color: #7dd3fc; font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
     }
-    .guess-lead { font-size: 1.1rem; color: #64748b; margin-bottom: 0.5rem; }
-    .guess-name { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 900; margin-bottom: 1.5rem; min-height: 3rem; }
+    .score-note {
+      margin-top: auto; padding-top: 0.75rem; font-size: 0.7rem; color: var(--muted); line-height: 1.5;
+    }
+
+    /* ---------- Guess screen ---------- */
+    .guess-screen { align-items: center; justify-content: center; padding: 2rem 1rem; }
+    .guess-card {
+      background: var(--card); color: #0f172a; border-radius: 20px; padding: 2.5rem 2rem;
+      max-width: 34rem; margin: 0 auto; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      text-align: center; width: 100%;
+    }
+    .guess-lead { font-size: 1rem; color: #64748b; margin: 0 0 0.5rem; }
+    .guess-name {
+      font-size: clamp(1.75rem, 4.5vw, 2.75rem); font-weight: 900;
+      letter-spacing: -0.02em; margin: 0 0 0.5rem; color: #0f172a;
+      line-height: 1.1; min-height: 1.1em;
+    }
+    .cert-badge {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
+      margin: 0.5rem 0 1.25rem;
+    }
+    .cert-badge.certain { background: #dcfce7; color: #15803d; }
+    .cert-badge.uncertain { background: #fef3c7; color: #92400e; }
+    .cert-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .cert-badge.certain .cert-dot { background: var(--yes); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25); }
+    .cert-badge.uncertain .cert-dot { background: #f59e0b; }
+
     .leaderboard { text-align: left; margin: 1rem 0; font-size: 0.9rem; color: #475569; }
-    .leaderboard div { padding: 0.35rem 0; border-bottom: 1px solid #e2e8f0; }
-    .guess-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 1.25rem; }
-    .guess-actions button { padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 0.95rem; }
+    .leaderboard strong {
+      display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em;
+      color: #64748b; margin-bottom: 0.5rem;
+    }
+    .lb-row { display: flex; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid #e2e8f0; }
+    .lb-row:last-child { border-bottom: 0; }
+    .lb-row .pct { font-variant-numeric: tabular-nums; font-weight: 600; color: #334155; }
+
+    .stats-row {
+      display: flex; gap: 0.5rem; justify-content: center; margin: 0.5rem 0 0.75rem;
+      font-size: 0.78rem; color: #64748b;
+    }
+    .stats-row span { background: #f1f5f9; padding: 0.3rem 0.65rem; border-radius: 999px; }
+
+    .guess-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 1.25rem; }
+    .guess-actions button {
+      padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; border: 0;
+      cursor: pointer; font-size: 0.95rem; transition: transform 0.12s ease, filter 0.12s ease;
+    }
+    .guess-actions button:hover { transform: translateY(-1px); filter: brightness(1.05); }
     .btn-win { background: var(--yes); color: #fff; }
-    .btn-fail { background: var(--no); color: #fff; }
     .btn-again { background: #334155; color: #fff; }
-    .celebrate { margin-top: 1rem; font-size: 1.1rem; font-weight: 700; color: var(--yes); }
-    .wrong-form { margin-top: 1rem; }
-    .wrong-form input { width: 100%; padding: 0.65rem; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 0.5rem; font-size: 1rem; }
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
+    .celebrate { margin-top: 1rem; font-size: 1rem; font-weight: 700; color: var(--yes); }
+
+    /* ---------- Modal ---------- */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+      z-index: 100; align-items: center; justify-content: center; padding: 1rem;
+      backdrop-filter: blur(4px);
+    }
     .modal-overlay.open { display: flex; }
-    .modal { background: var(--card); color: #0f172a; border-radius: 16px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.75rem; position: relative; }
-    .modal-close { position: absolute; top: 1rem; right: 1rem; background: #e2e8f0; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
-    .modal-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
-    .modal-col h4 { margin: 0 0 0.5rem; font-size: 0.95rem; color: #6366f1; }
-    .modal-col p { margin: 0; font-size: 0.85rem; line-height: 1.5; color: #475569; }
-    .formula { font-family: ui-monospace, monospace; font-size: 0.78rem; background: #f1f5f9; padding: 0.5rem; border-radius: 6px; margin-top: 0.5rem; }
+    .modal {
+      background: var(--card); color: #0f172a; border-radius: 16px;
+      max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto;
+      padding: 1.75rem 1.5rem; position: relative;
+    }
+    .modal h3 { margin: 0 0 0.25rem; font-size: 1.25rem; }
+    .modal-sub { color: #64748b; font-size: 0.9rem; margin: 0 0 1.25rem; }
+    .modal-close {
+      position: absolute; top: 0.85rem; right: 0.85rem; background: #e2e8f0;
+      border: 0; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1rem;
+    }
+    .modal-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; }
+    .modal-col h4 { margin: 0 0 0.5rem; font-size: 0.95rem; color: var(--indigo); }
+    .modal-col p { margin: 0; font-size: 0.88rem; line-height: 1.55; color: #475569; }
+    .formula {
+      font-family: var(--mono); font-size: 0.78rem; background: #f1f5f9;
+      padding: 0.55rem 0.65rem; border-radius: 6px; margin-top: 0.5rem; color: #0f172a;
+    }
+
+    /* ---------- Responsive ---------- */
     @media (max-width: 900px) {
       .game-layout { flex-direction: column; }
-      .math-panel { max-height: 280px; overflow-y: auto; order: 2; }
-      .question-panel { order: 1; }
+      .math-panel { order: 2; }
+      .question-panel { order: 1; min-height: 360px; }
       .modal-cols { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .wrap { padding: 0.85rem 0.85rem 4rem; }
+      .question-panel { padding: 1.25rem; min-height: 320px; }
+      .q-buttons form { max-width: none; }
+      .guess-card { padding: 1.75rem 1.25rem; }
+      .btn-ghost { bottom: 0.75rem; right: 0.75rem; }
     }
   </style>
 </head>
@@ -101,34 +263,65 @@
   <div class="wrap">
     <div class="welcome-inner">
       <h1>Class Akinator</h1>
-      <p class="subtitle">Powered by Eigenvalues &amp; SVD (Python / NumPy)</p>
-      <p class="tagline">Think of someone in this class. I will guess who it is.</p>
-      <form method="post" action="/start"><button type="submit" class="btn-primary">Let&rsquo;s play</button></form>
-      <p class="footer-note">IE University | BCSAI 2026 | Matrices and Linear Transformations</p>
+      <p class="subtitle">Powered by Eigenvalues &amp; SVD · Python / NumPy</p>
+      <p class="tagline">
+        Think of someone in the BCSAI 2026 cohort. I&rsquo;ll ask yes/no questions and
+        guess who it is — using a singular-value decomposition of the class.
+      </p>
+      <form method="post" action="/start">
+        <button type="submit" class="btn-primary">Let&rsquo;s play</button>
+      </form>
+      <p class="footer-note">IE University · BCSAI 2026 · Matrices and Linear Transformations</p>
     </div>
     <button type="button" class="btn-ghost" data-open-modal>How it works</button>
   </div>
+
   {% elif phase == 'play' %}
   <div class="wrap">
     <div class="game-layout">
-      <div class="question-panel">
-        <div class="progress">Question {{ question_num }} of ~8</div>
+      <section class="question-panel" aria-label="Current question">
+        <div class="progress-bar">
+          <span class="progress-chip">Question {{ question_num }}</span>
+          <span class="remaining-chip">
+            {{ consistent_n }} of {{ total_people }} still possible
+          </span>
+          {% set pct_narrowed = ((total_people - consistent_n) / total_people * 100) if total_people else 0 %}
+          <div class="progress-track"><div class="progress-fill" style="width: {{ pct_narrowed }}%"></div></div>
+        </div>
+
         <div class="q-text">{{ question_text }}</div>
+
         <div class="q-buttons">
-          <form method="post" action="/answer"><input type="hidden" name="value" value="yes" /><button type="submit" class="btn-yes">YES</button></form>
-          <form method="post" action="/answer"><input type="hidden" name="value" value="no" /><button type="submit" class="btn-no">NO</button></form>
+          <form method="post" action="/answer" data-answer-form>
+            <input type="hidden" name="value" value="yes" />
+            <button type="submit" class="btn-yes" data-answer-btn>YES</button>
+          </form>
+          <form method="post" action="/answer" data-answer-form>
+            <input type="hidden" name="value" value="no" />
+            <button type="submit" class="btn-no" data-answer-btn>NO</button>
+          </form>
         </div>
-      </div>
-      <div class="math-panel">
+      </section>
+
+      <aside class="math-panel" aria-label="SVD engine state">
         <h2>SVD Engine</h2>
-        {% for c in top_candidates %}
-        <div class="candidate{% if c.leader %} leader{% endif %}">
-          <div class="cand-name">{{ c.name }} · {{ '%.3f'|format(c.score) }}</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width: {{ c.bar_pct }}%"></div></div>
+        <div class="cand-list">
+          {% for c in top_candidates %}
+          <div class="candidate{% if c.leader %} leader certain{% endif %}">
+            <div class="cand-head">
+              <span>{{ c.name }}</span>
+              <span class="cand-pct">{{ '%.1f'|format(c.probability * 100) }}%</span>
+            </div>
+            <div class="bar-wrap"><div class="bar-fill" style="width: {{ c.bar_pct }}%"></div></div>
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
+
         <div class="sigma-block">
-          <p>Latent dimensions active: <strong>k = 14</strong> (~{{ cumulative_k_pct }}% variance)</p>
+          <p class="label">
+            Latent dimensions active: <strong>k = {{ k_latent }}</strong>
+            (~{{ cumulative_k_pct }}% variance)
+          </p>
           <div class="sigma-bars">
             {% set smax = sigma_display[0] %}
             {% for sig in sigma_display[:6] %}
@@ -138,69 +331,117 @@
             </div>
             {% endfor %}
           </div>
+          <div class="entropy-line">H(next question) = {{ '%.3f'|format(entropy) }} bits</div>
         </div>
-        <div class="entropy-line">Current question entropy: H = {{ '%.3f'|format(entropy) }}</div>
-        <p class="score-note">SVD precomputed with numpy.linalg.svd. Scoring: 60% latent cosine + 40% raw agreement after 3 answers; scores min–max normalised before blending.</p>
-      </div>
+
+        <p class="score-note">
+          Scoring: exact hard consistency mask (0-probability to any candidate
+          contradicting an answer), then SVD cosine + raw agreement blend
+          among survivors.
+        </p>
+      </aside>
     </div>
     <button type="button" class="btn-ghost" data-open-modal>How it works</button>
   </div>
+
   {% elif phase == 'guess' %}
   <div class="wrap guess-screen">
     <div class="guess-card">
-      <p class="guess-lead">I think you are thinking of&hellip;</p>
-      <div class="guess-name" id="guess-name" data-full="{{ guess_name }}"></div>
+      <p class="guess-lead">I think you&rsquo;re thinking of&hellip;</p>
+      <div class="guess-name" id="guess-name" data-full="{{ guess_name }}">{{ guess_name }}</div>
+
+      {% if is_certain %}
+      <div class="cert-badge certain">
+        <span class="cert-dot"></span>
+        Certainty: 100% · unique consistent candidate
+      </div>
+      {% else %}
+      <div class="cert-badge uncertain">
+        <span class="cert-dot"></span>
+        Best guess: {{ '%.1f'|format(guess_probability * 100) }}% · {{ consistent_n }} still consistent
+      </div>
+      {% endif %}
+
+      <div class="stats-row">
+        <span>{{ questions_asked }} questions asked</span>
+        <span>k = {{ k_latent }} latent dims</span>
+      </div>
+
       <div class="leaderboard">
-        <strong>Top 3</strong>
-        {% for idx, sc in guess_ranking %}
-        <div>{{ loop.index }}. {{ people[idx] }} — {{ '%.3f'|format(sc) }}</div>
+        <strong>Top candidates</strong>
+        {% for idx, p in guess_ranking %}
+        <div class="lb-row">
+          <span>{{ loop.index }}. {{ people[idx] }}</span>
+          <span class="pct">{{ '%.1f'|format(p * 100) }}%</span>
+        </div>
         {% endfor %}
       </div>
+
       <div class="guess-actions">
-        <form method="post" action="/guess/correct"><button type="submit" class="btn-win">Yes, correct!</button></form>
-        <form method="post" action="/guess/wrong"><button type="submit" class="btn-fail">No, wrong!</button></form>
-        <form method="post" action="/play-again"><button type="submit" class="btn-again">Play again</button></form>
+        {% if not celebrated %}
+        <form method="post" action="/guess/correct">
+          <button type="submit" class="btn-win">Yes, correct!</button>
+        </form>
+        {% endif %}
+        <form method="post" action="/play-again">
+          <button type="submit" class="btn-again">Play again</button>
+        </form>
       </div>
+
       {% if celebrated %}
       <p class="celebrate">The eigenvalues never lie.</p>
-      {% endif %}
-      {% if show_wrong_form %}
-      <div class="wrong-form">
-        <p style="margin:0 0 0.5rem;font-size:0.9rem;">Who were you thinking of?</p>
-        <input type="text" placeholder="Name (optional)" />
-        <form method="post" action="/play-again" style="margin-top:0.5rem"><button type="submit" class="btn-again">Play again</button></form>
-      </div>
       {% endif %}
     </div>
     <button type="button" class="btn-ghost" data-open-modal>How it works</button>
   </div>
   {% endif %}
 
-  <div class="modal-overlay" id="modal">
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
-      <button type="button" class="modal-close" data-close-modal>&times;</button>
-      <h3>How it works</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="Close">&times;</button>
+      <h3 id="modal-title">How it works</h3>
+      <p class="modal-sub">
+        A {{ total_people }}×{{ total_questions }} binary matrix, SVD,
+        and a hard consistency mask.
+      </p>
       <div class="modal-cols">
         <div class="modal-col">
           <h4>The matrix</h4>
-          <p><strong>M</strong> is 46×36. Each row is a classmate; each column is a yes/no question (final Excel: no &ldquo;American&rdquo; or mixed-background column).</p>
-          <div class="formula">M ∈ {0,1}^{46×36}</div>
+          <p>
+            <strong>M</strong> is {{ total_people }}×{{ total_questions }}. Rows are classmates,
+            columns are yes/no questions spanning region, appearance, personality,
+            and habits.
+          </p>
+          <div class="formula">M ∈ {0,1}^{{ '{' }}{{ total_people }}×{{ total_questions }}{{ '}' }}</div>
         </div>
         <div class="modal-col">
           <h4>SVD</h4>
-          <p><strong>M = UΣV<sup>T</sup></strong> via <code>numpy.linalg.svd</code>. With <strong>k = 14</strong>, about <strong>{{ cumulative_k_pct }}%</strong> of variance is retained. σ₁ ≈ {{ '%.2f'|format(sigma_display[0]) }} explains about <strong>{{ variance_sigma1_pct }}%</strong> of variance.</p>
-          <div class="formula">Z = M V<sub>k</sub><sup>T</sup></div>
+          <p>
+            <strong>M = UΣVᵀ</strong> via <code>numpy.linalg.svd</code>. Keeping
+            <strong>k = {{ k_latent }}</strong> dimensions retains
+            <strong>{{ cumulative_k_pct }}%</strong> of the variance. σ₁ ≈
+            {{ '%.2f'|format(sigma_display[0]) }} alone explains about
+            <strong>{{ variance_sigma1_pct }}%</strong>.
+          </p>
+          <div class="formula">Z = M Vₖᵀ · zᵤ = Vₖ a</div>
         </div>
         <div class="modal-col">
-          <h4>The score</h4>
-          <p>Answers form <strong>a</strong>. Early rounds: raw agreement. From the 4th answer: blend with cosine similarity in latent space. Next question: maximum binary entropy under current belief.</p>
-          <div class="formula">z<sub>user</sub> = V<sub>k</sub> a</div>
+          <h4>The guess</h4>
+          <p>
+            Any candidate that contradicts an answered question has probability
+            exactly 0. When exactly one candidate survives, the belief hits
+            <strong>1.0</strong> and the game stops. Until then, the next
+            question is picked by maximising binary entropy over the filtered
+            belief.
+          </p>
+          <div class="formula">argmax<sub>j</sub> H(bᵀ M<sub>:,j</sub>)</div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    // Modal open/close
     document.querySelectorAll('[data-open-modal]').forEach(function (b) {
       b.addEventListener('click', function () { document.getElementById('modal').classList.add('open'); });
     });
@@ -210,15 +451,19 @@
     document.getElementById('modal').addEventListener('click', function (e) {
       if (e.target.id === 'modal') e.currentTarget.classList.remove('open');
     });
-    (function typewriter() {
-      var el = document.getElementById('guess-name');
-      if (!el || !el.dataset.full) return;
-      var full = el.dataset.full, k = 0;
-      function step() {
-        if (k <= full.length) { el.textContent = full.slice(0, k++); setTimeout(step, k < 4 ? 55 : 42); }
-      }
-      step();
-    })();
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') document.getElementById('modal').classList.remove('open');
+    });
+
+    // Disable all yes/no buttons as soon as either form is submitted, so a
+    // double-click (or slow network) cannot double-post an answer.
+    document.querySelectorAll('[data-answer-form]').forEach(function (form) {
+      form.addEventListener('submit', function () {
+        document.querySelectorAll('[data-answer-btn]').forEach(function (btn) {
+          btn.setAttribute('disabled', 'disabled');
+        });
+      });
+    });
   </script>
 </body>
 </html>

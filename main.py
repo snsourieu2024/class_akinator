@@ -1,4 +1,8 @@
-"""FastAPI app — all game logic runs in Python (engine + NumPy SVD)."""
+"""FastAPI app for the Class Akinator.
+
+Terminates *immediately* when true certainty (probability = 1.0) is reached,
+i.e. when exactly one candidate is still consistent with every answer given.
+"""
 
 from __future__ import annotations
 
@@ -13,12 +17,17 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from data import PEOPLE, QUESTIONS
 from engine import (
+    K,
+    certainty,
+    consistent_count,
     cumulative_k_pct,
-    final_scores,
+    guess_index,
+    n_people,
     pick_question,
+    question_entropy,
     should_guess,
     sigma_display,
-    sorted_scores_indices,
+    sorted_by_belief,
     top_candidates_for_ui,
     variance_sigma1_pct,
 )
@@ -33,12 +42,11 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 
 
-def _get_answers(session: Dict[str, Any]) -> Dict[int, bool]:
-    raw = session.get("answers") or {}
-    return {int(k): bool(v) for k, v in raw.items()}
+def _answers(session) -> Dict[int, bool]:
+    return {int(k): bool(v) for k, v in (session.get("answers") or {}).items()}
 
 
-def _set_answers(session: Dict[str, Any], answers: Dict[int, bool]) -> None:
+def _set_answers(session, answers: Dict[int, bool]) -> None:
     session["answers"] = {str(k): v for k, v in answers.items()}
 
 
@@ -53,32 +61,40 @@ def home(request: Request):
         "sigma_display": sigma_display,
         "variance_sigma1_pct": round(variance_sigma1_pct, 2),
         "cumulative_k_pct": round(cumulative_k_pct, 2),
+        "k_latent": K,
+        "total_people": n_people,
+        "total_questions": len(QUESTIONS),
     }
 
     if phase == "play":
+        answers = _answers(session)
         q = int(session["current_q"])
-        answers = _get_answers(session)
-        n = len(answers) + 1
-        top, entropy = top_candidates_for_ui(answers, q)
+        top, _ = top_candidates_for_ui(answers, top_n=5)
+        ent = question_entropy(answers, q)
         ctx.update(
             {
                 "question_text": QUESTIONS[q],
-                "question_num": n,
+                "question_num": len(answers) + 1,
                 "current_q": q,
                 "top_candidates": top,
-                "entropy": round(entropy, 3),
+                "entropy": round(ent, 3),
+                "consistent_n": consistent_count(answers),
             }
         )
     elif phase == "guess":
-        answers = _get_answers(session)
-        scores = final_scores(answers)
-        ranking = sorted_scores_indices(scores)[:3]
+        answers = _answers(session)
+        ranking = sorted_by_belief(answers)
+        gi = guess_index(answers)
+        top_prob = ranking[0][1] if ranking else 0.0
         ctx.update(
             {
-                "guess_name": PEOPLE[ranking[0][0]],
-                "guess_ranking": ranking,
+                "guess_name": PEOPLE[gi],
+                "guess_ranking": ranking[:3],
+                "guess_probability": top_prob,
+                "is_certain": top_prob >= 0.999999,
+                "consistent_n": consistent_count(answers),
+                "questions_asked": len(answers),
                 "celebrated": bool(session.pop("celebrated", False)),
-                "show_wrong_form": bool(session.pop("show_wrong_form", False)),
             }
         )
 
@@ -93,7 +109,6 @@ def start(request: Request):
     j, _ = pick_question({})
     session["current_q"] = j
     session.pop("celebrated", None)
-    session.pop("show_wrong_form", None)
     return RedirectResponse(url="/", status_code=303)
 
 
@@ -102,33 +117,30 @@ def answer(request: Request, value: str = Form(...)):
     session = request.session
     if session.get("phase") != "play":
         return RedirectResponse(url="/", status_code=303)
+
     q = int(session["current_q"])
-    answers = _get_answers(session)
+    answers = _answers(session)
     answers[q] = value.lower() in ("yes", "y", "1", "true")
     _set_answers(session, answers)
 
-    scores = final_scores(answers)
-    n_ans = len(answers)
-
-    if should_guess(scores, n_ans) or n_ans >= len(QUESTIONS):
+    # Terminate immediately on true certainty or if nothing remains to ask.
+    if should_guess(answers) or certainty(answers) >= 0.999999:
         session["phase"] = "guess"
         session.pop("current_q", None)
         return RedirectResponse(url="/", status_code=303)
 
     j, _ = pick_question(answers)
-    session["current_q"] = j
+    if j < 0:
+        session["phase"] = "guess"
+        session.pop("current_q", None)
+    else:
+        session["current_q"] = j
     return RedirectResponse(url="/", status_code=303)
 
 
 @app.post("/guess/correct")
 def guess_correct(request: Request):
     request.session["celebrated"] = True
-    return RedirectResponse(url="/", status_code=303)
-
-
-@app.post("/guess/wrong")
-def guess_wrong(request: Request):
-    request.session["show_wrong_form"] = True
     return RedirectResponse(url="/", status_code=303)
 
 
@@ -139,7 +151,6 @@ def play_again(request: Request):
     return RedirectResponse(url="/", status_code=303)
 
 
-# Optional: mount empty static if folder exists (for future assets)
 _static = os.path.join(os.path.dirname(__file__), "static")
 if os.path.isdir(_static):
     app.mount("/static", StaticFiles(directory=_static), name="static")
