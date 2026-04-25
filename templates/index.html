@@ -335,9 +335,12 @@
         </div>
 
         <p class="score-note">
-          Scoring: exact hard consistency mask (0-probability to any candidate
-          contradicting an answer), then SVD cosine + raw agreement blend
-          among survivors.
+          Scoring: hard consistency mask first (probability 0 for any
+          candidate contradicting an answer). Until 4 questions are
+          answered, survivors are ranked by raw agreement; from the 4th
+          answer onward, by a 60% SVD-cosine + 40% raw-agreement blend,
+          min&ndash;maxed within the survivor set, then renormalised so
+          the belief sums to 1.
         </p>
       </aside>
     </div>
@@ -431,12 +434,15 @@
           <h4>The guess</h4>
           <p>
             Any candidate that contradicts an answered question has probability
-            exactly 0. When exactly one candidate survives, the belief hits
-            <strong>1.0</strong> and the game stops. Until then, the next
-            question is picked by maximising binary entropy over the filtered
-            belief.
+            exactly 0. The remaining survivors are scored by raw agreement
+            (first 3 answers) or by a 60/40 SVD-cosine + raw-agreement blend
+            (from the 4th answer on); those scores are min&ndash;maxed
+            within the survivor set and renormalised to a belief that sums
+            to 1. When exactly one survivor remains, belief hits
+            <strong>1.0</strong> and the game stops; until then, the next
+            question maximises binary entropy of the filtered belief.
           </p>
-          <div class="formula">argmax<sub>j</sub> H(bᵀ M<sub>:,j</sub>)</div>
+          <div class="formula">b = s / &sum; s &nbsp;·&nbsp; argmax<sub>j</sub> H(bᵀ M<sub>:,j</sub>)</div>
         </div>
       </div>
     </div>
