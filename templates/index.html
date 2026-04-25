@@ -367,6 +367,7 @@
         <span>k = {{ k_latent }} latent dims</span>
       </div>
 
+      {% if guess_ranking|length > 1 %}
       <div class="leaderboard">
         <strong>Top candidates</strong>
         {% for idx, p in guess_ranking %}
@@ -376,6 +377,7 @@
         </div>
         {% endfor %}
       </div>
+      {% endif %}
 
       <div class="guess-actions">
         {% if not celebrated %}

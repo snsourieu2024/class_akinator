@@ -278,6 +278,17 @@ def top_candidates_for_ui(
 
 
 def sorted_by_belief(answers: Dict[int, bool]) -> List[Tuple[int, float]]:
+    """Candidates ranked by belief, *excluding* probability-0 rows.
+
+    Probability-0 means the candidate contradicts at least one given answer,
+    so it is not a candidate at all — we never want it in the UI's
+    leaderboard. If for some reason every candidate has zero belief (the
+    fallback path inside ``belief``), we fall back to the raw argsort so the
+    caller still gets something to render.
+    """
     b = belief(answers)
     order = np.argsort(-b)
+    nonzero = [(int(i), float(b[int(i)])) for i in order if b[int(i)] > 0.0]
+    if nonzero:
+        return nonzero
     return [(int(i), float(b[int(i)])) for i in order]
