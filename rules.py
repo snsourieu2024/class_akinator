@@ -24,10 +24,12 @@ MUTEX_PAIRS: List[Tuple[int, int]] = [
 ]
 
 MUTEX_GROUPS: List[FrozenSet[int]] = [
-    frozenset({11, 12, 13, 14}),  # hair color: dark, blonde, red, blue
-    frozenset({33, 34, 35}),       # living: flatmates, family, alone
+    frozenset({0, 1, 2, 3, 4, 5, 6, 7, 8}),  # ethnicity (European, Spanish, Caribbean, E.European, Latin Am., Arab/ME, Asian, N.American, African)
+    frozenset({11, 12, 13, 14}),              # hair color: dark, blonde, red, blue
+    frozenset({33, 34, 35}),                  # living: flatmates, family, alone
 ]
 
 IMPLICATIONS: List[Tuple[int, bool, FrozenSet[int]]] = [
-    (9, False, frozenset({20})),   # not male → skip facial hair
+    (9, False, frozenset({20})),    # not male → skip facial hair
+    (15, False, frozenset({17})),   # not long hair → skip short hair
 ]

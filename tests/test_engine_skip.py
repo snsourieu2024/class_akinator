@@ -55,13 +55,29 @@ def test_male_yes_does_not_exclude_facial_hair():
     assert 20 not in excluded_questions({9: True})
 
 
-def test_ethnicity_yes_does_not_exclude_other_ethnicities():
-    # Q6 Asian YES → all of Q0..Q8 except Q6 must remain in play
-    excl = excluded_questions({6: True})
+def test_ethnicity_yes_excludes_other_ethnicities():
+    # Q5 Arab/Middle Eastern YES → all other Q0..Q8 must be excluded
+    excl = excluded_questions({5: True})
     for q in range(9):
-        if q == 6:
+        if q == 5:
             continue
-        assert q not in excl, f"Q{q} should not be excluded by Q6=YES"
+        assert q in excl, f"Q{q} should be excluded by Q5=YES"
+
+
+def test_ethnicity_no_does_not_exclude_other_ethnicities():
+    # Q5 Arab/ME NO → other ethnicities still in play (a NO doesn't pin anything)
+    excl = excluded_questions({5: False})
+    for q in range(9):
+        assert q not in excl, f"Q{q} should not be excluded by Q5=NO"
+
+
+def test_no_on_long_hair_excludes_short_hair():
+    assert 17 in excluded_questions({15: False})
+
+
+def test_yes_on_long_hair_still_excludes_short_hair():
+    # The mutex pair rule still fires for the YES direction
+    assert 17 in excluded_questions({15: True})
 
 
 def test_pick_question_skips_excluded():

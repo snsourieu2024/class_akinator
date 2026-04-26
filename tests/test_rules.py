@@ -37,10 +37,12 @@ def test_expected_specific_rules_present():
     assert (24, 25) in pairs
     assert (31, 32) in pairs
 
+    assert frozenset({0, 1, 2, 3, 4, 5, 6, 7, 8}) in MUTEX_GROUPS
     assert frozenset({11, 12, 13, 14}) in MUTEX_GROUPS
     assert frozenset({33, 34, 35}) in MUTEX_GROUPS
 
     assert (9, False, frozenset({20})) in IMPLICATIONS
+    assert (15, False, frozenset({17})) in IMPLICATIONS
 
 
 def test_all_referenced_indices_are_in_range():
