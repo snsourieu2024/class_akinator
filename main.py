@@ -116,6 +116,10 @@ def answer(request: Request, value: str = Form(...)):
         return RedirectResponse(url="/", status_code=303)
 
     j, _ = pick_question(answers)
+    if j < 0:
+        session["phase"] = "guess"
+        session.pop("current_q", None)
+        return RedirectResponse(url="/", status_code=303)
     session["current_q"] = j
     return RedirectResponse(url="/", status_code=303)
 
