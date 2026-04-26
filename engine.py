@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from data import KNOWLEDGE_MATRIX, PEOPLE
+from rules import IMPLICATIONS, MUTEX_GROUPS, MUTEX_PAIRS
 
 K = 14
 M = np.array(KNOWLEDGE_MATRIX, dtype=np.float64)
@@ -91,21 +92,41 @@ def belief_from_scores(scores: np.ndarray) -> np.ndarray:
     return shifted / np.sum(shifted)
 
 
+def excluded_questions(answers: Dict[int, bool]) -> set:
+    """Return question indices that are redundant given the current answers."""
+    excluded: set = set()
+    for a, b in MUTEX_PAIRS:
+        if answers.get(a) is True:
+            excluded.add(b)
+        if answers.get(b) is True:
+            excluded.add(a)
+    for group in MUTEX_GROUPS:
+        for member in group:
+            if answers.get(member) is True:
+                excluded |= (group - {member})
+                break
+    for q, expected, skip in IMPLICATIONS:
+        if q in answers and answers[q] == expected:
+            excluded |= skip
+    excluded -= set(answers.keys())
+    return excluded
+
+
 def pick_question(answers: Dict[int, bool]) -> Tuple[int, float]:
     answered = set(answers.keys())
+    excluded = excluded_questions(answers)
+    candidates = [j for j in range(n_questions) if j not in answered and j not in excluded]
+    if not candidates:
+        return -1, 0.0
     scores = final_scores(answers)
     b = belief_from_scores(scores)
     best_j, best_h = -1, -1.0
-    for j in range(n_questions):
-        if j in answered:
-            continue
+    for j in candidates:
         p_yes = float(np.dot(b, M[:, j]))
         h = h_binary(p_yes)
         if h > best_h:
             best_h = h
             best_j = j
-    if best_j < 0:
-        return 0, 0.0
     p_cur = float(np.dot(b, M[:, best_j]))
     return best_j, h_binary(p_cur)
 
