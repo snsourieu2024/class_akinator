@@ -13,15 +13,19 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from data import PEOPLE, QUESTIONS
 from engine import (
+    best_guess_index,
     cumulative_k_pct,
     final_scores,
     pick_question,
+    scores_excluding,
     should_guess,
     sigma_display,
     sorted_scores_indices,
     top_candidates_for_ui,
     variance_sigma1_pct,
 )
+
+FIRST_GUESS_AT = 14
 
 app = FastAPI(title="Class Akinator")
 app.add_middleware(
@@ -71,18 +75,28 @@ def home(request: Request):
         )
     elif phase == "guess":
         answers = _get_answers(session)
-        scores = final_scores(answers)
-        ranking = sorted_scores_indices(scores)[:3]
+        rejected = [int(r) for r in session.get("rejected", [])]
+        scores = scores_excluding(answers, rejected)
+        ranking = [(i, s) for (i, s) in sorted_scores_indices(scores) if i not in rejected][:3]
+        guess_idx = int(session.get("current_guess", ranking[0][0] if ranking else 0))
         ctx.update(
             {
-                "guess_name": PEOPLE[ranking[0][0]],
+                "guess_name": PEOPLE[guess_idx],
                 "guess_ranking": ranking,
                 "celebrated": bool(session.pop("celebrated", False)),
-                "show_wrong_form": bool(session.pop("show_wrong_form", False)),
+                "rejected_count": len(rejected),
+                "attempt_num": len(rejected) + 1,
             }
         )
 
     return templates.TemplateResponse(request, "index.html", ctx)
+
+
+def _enter_guess(session: Dict[str, Any], answers: Dict[int, bool]) -> None:
+    rejected = [int(r) for r in session.get("rejected", [])]
+    session["phase"] = "guess"
+    session["current_guess"] = best_guess_index(answers, rejected)
+    session.pop("current_q", None)
 
 
 @app.post("/start")
@@ -90,10 +104,11 @@ def start(request: Request):
     session = request.session
     session["phase"] = "play"
     session["answers"] = {}
+    session["rejected"] = []
     j, _ = pick_question({})
     session["current_q"] = j
     session.pop("celebrated", None)
-    session.pop("show_wrong_form", None)
+    session.pop("current_guess", None)
     return RedirectResponse(url="/", status_code=303)
 
 
@@ -107,18 +122,20 @@ def answer(request: Request, value: str = Form(...)):
     answers[q] = value.lower() in ("yes", "y", "1", "true")
     _set_answers(session, answers)
 
-    scores = final_scores(answers)
     n_ans = len(answers)
+    rejected = [int(r) for r in session.get("rejected", [])]
 
-    if should_guess(scores, n_ans) or n_ans >= len(QUESTIONS):
-        session["phase"] = "guess"
-        session.pop("current_q", None)
+    first_guess_due = n_ans >= FIRST_GUESS_AT and not rejected
+    confident_again = bool(rejected) and should_guess(scores_excluding(answers, rejected), n_ans)
+    out_of_questions = n_ans >= len(QUESTIONS)
+
+    if first_guess_due or confident_again or out_of_questions:
+        _enter_guess(session, answers)
         return RedirectResponse(url="/", status_code=303)
 
     j, _ = pick_question(answers)
     if j < 0:
-        session["phase"] = "guess"
-        session.pop("current_q", None)
+        _enter_guess(session, answers)
         return RedirectResponse(url="/", status_code=303)
     session["current_q"] = j
     return RedirectResponse(url="/", status_code=303)
@@ -132,7 +149,22 @@ def guess_correct(request: Request):
 
 @app.post("/guess/wrong")
 def guess_wrong(request: Request):
-    request.session["show_wrong_form"] = True
+    session = request.session
+    rejected = [int(r) for r in session.get("rejected", [])]
+    cg = session.get("current_guess")
+    if cg is not None and int(cg) not in rejected:
+        rejected.append(int(cg))
+    session["rejected"] = rejected
+    session.pop("current_guess", None)
+
+    answers = _get_answers(session)
+    j, _ = pick_question(answers)
+    if j < 0 or len(rejected) >= len(PEOPLE):
+        _enter_guess(session, answers)
+        return RedirectResponse(url="/", status_code=303)
+
+    session["phase"] = "play"
+    session["current_q"] = j
     return RedirectResponse(url="/", status_code=303)
 
 

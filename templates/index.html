@@ -148,7 +148,9 @@
   {% elif phase == 'guess' %}
   <div class="wrap guess-screen">
     <div class="guess-card">
-      <p class="guess-lead">I think you are thinking of&hellip;</p>
+      <p class="guess-lead">
+        {% if attempt_num and attempt_num > 1 %}Attempt #{{ attempt_num }} — I think you are thinking of&hellip;{% else %}I think you are thinking of&hellip;{% endif %}
+      </p>
       <div class="guess-name" id="guess-name" data-full="{{ guess_name }}"></div>
       <div class="leaderboard">
         <strong>Top 3</strong>
@@ -163,13 +165,6 @@
       </div>
       {% if celebrated %}
       <p class="celebrate">The eigenvalues never lie.</p>
-      {% endif %}
-      {% if show_wrong_form %}
-      <div class="wrong-form">
-        <p style="margin:0 0 0.5rem;font-size:0.9rem;">Who were you thinking of?</p>
-        <input type="text" placeholder="Name (optional)" />
-        <form method="post" action="/play-again" style="margin-top:0.5rem"><button type="submit" class="btn-again">Play again</button></form>
-      </div>
       {% endif %}
     </div>
     <button type="button" class="btn-ghost" data-open-modal>How it works</button>

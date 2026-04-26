@@ -141,6 +141,20 @@ def should_guess(scores: np.ndarray, n_answered: int) -> bool:
     return s0 - s1 > 0.25 * s0
 
 
+def scores_excluding(answers: Dict[int, bool], rejected) -> np.ndarray:
+    """Return final_scores with rejected person indices zeroed out."""
+    scores = final_scores(answers).copy()
+    for r in rejected:
+        scores[int(r)] = 0.0
+    return scores
+
+
+def best_guess_index(answers: Dict[int, bool], rejected) -> int:
+    """Top non-rejected person index based on current answers."""
+    scores = scores_excluding(answers, rejected)
+    return int(np.argsort(-scores)[0])
+
+
 def question_entropy_for_display(answers: Dict[int, bool], q_index: int) -> float:
     scores = final_scores(answers)
     b = belief_from_scores(scores)
